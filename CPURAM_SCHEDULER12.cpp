@@ -87,13 +87,6 @@ void isCritPerformance(double *cpu, double *ram)
 
     *cpu = cpu_used / 4.0;
     *ram = percent_ram;
-
-    // printf("cpu: %f, ram: %f\n", *cpu, *ram);
-    // if (percent_ram >= 70.0 || *cpu >= 70.0)
-    // {
-    //     return true;
-    // }
-    // return false;
 }
 
 void sendWarningMsg(const char *currenttime, const double &cpu, const double &ram)
@@ -163,8 +156,8 @@ int main(int argc, char *argv[])
         time(&local);
         localtm = localtime(&local);
 
-        if ((localtm->tm_hour == 12 && localtm->tm_min == 15 && localtm->tm_sec == 0) ||
-            (localtm->tm_hour == 12 && localtm->tm_min == 30 && localtm->tm_sec == 0))
+        if ((localtm->tm_hour == 12 && localtm->tm_min == 00 && localtm->tm_sec == 0) ||
+            (localtm->tm_hour == 23 && localtm->tm_min == 59 && localtm->tm_sec == 0))
         {
             double avgCpu = 0.0, avgRam = 0.0;
             
@@ -181,31 +174,6 @@ int main(int argc, char *argv[])
             nCpu = 0;
             nRam = 0;
         }
-        // if (isCritPerformance(&cpu_used, &ram_used))
-        // {
-        //     time_t local;
-        //     struct tm *localtm;
-
-        //     time(&local);
-        //     localtm = localtime(&local);
-
-        //     char filename[128], program[128];
-        //     strcpy(program, argv[0]);
-        //     memset(filename, 0x00, sizeof(filename));
-        //     sprintf(filename, "%s/%s%02d%02d.log", getenv("LOG_HOME"), argv[0],
-        //             localtm->tm_mon + 1, localtm->tm_mday);
-
-        //     FILE *log = fopen(filename, "a");
-        //     if (log != NULL)
-        //     {
-        //         fprintf(log, "%s", asctime(localtm));
-        //         fprintf(log, "CPU used: %.2f %%\n", cpu_used);
-        //         fprintf(log, "RAM used: %.2f %%\n\n", ram_used);
-
-        //         sendWarningMsg(asctime(localtm), &cpu_used, &ram_used);
-        //     }
-        //     fclose(log);
-        // };
     }
 
     return 0;
