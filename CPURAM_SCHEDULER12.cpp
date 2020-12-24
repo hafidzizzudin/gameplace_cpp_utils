@@ -121,6 +121,10 @@ void checkLocalTime()
     localtm = localtime(&local);
 
     printf("current time : %s", asctime(localtm));
+
+    FILE *log = fopen("check_cron.txt", "a");
+
+    fprintf(log, asctime(localtm));
 }
 
 int main(int argc, char *argv[])
