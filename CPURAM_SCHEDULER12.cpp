@@ -85,7 +85,7 @@ bool isCritPerformance(double *cpu, double *ram)
 
     pclose(pipe);
 
-    *cpu = cpu_used/4.0;
+    *cpu = cpu_used / 4.0;
     *ram = percent_ram;
 
     if (percent_ram >= 70.0 || *cpu >= 70.0)
@@ -112,47 +112,60 @@ void sendWarningMsg(const char *currenttime, const double *cpu, const double *ra
     system(command.c_str());
 }
 
+void checkLocalTime()
+{
+    time_t local;
+    struct tm *localtm;
+
+    time(&local);
+    localtm = localtime(&local);
+
+    printf("current time : %s", asctime(localtm));
+}
+
 int main(int argc, char *argv[])
 {
-    pid_t pid = fork();
+    checkLocalTime();
 
-    if (pid > 0)
-    {
-        printf("Process run in the background PID: %d\n", pid);
-        exit(0);
-    }
+    // pid_t pid = fork();
 
-    while (1)
-    {
-        sleep(1);
-        double cpu_used, ram_used;
+    // if (pid > 0)
+    // {
+    //     printf("Process run in the background PID: %d\n", pid);
+    //     exit(0);
+    // }
 
-        if (isCritPerformance(&cpu_used, &ram_used))
-        {
-            time_t local;
-            struct tm *localtm;
+    // while (1)
+    // {
+    //     sleep(1);
+    //     double cpu_used, ram_used;
 
-            time(&local);
-            localtm = localtime(&local);
+    //     if (isCritPerformance(&cpu_used, &ram_used))
+    //     {
+    //         time_t local;
+    //         struct tm *localtm;
 
-            char filename[128], program[128];
-            strcpy(program, argv[0]);
-            memset(filename, 0x00, sizeof(filename));
-            sprintf(filename, "%s/%s%02d%02d.log", getenv("LOG_HOME"), argv[0],
-                    localtm->tm_mon + 1, localtm->tm_mday);
+    //         time(&local);
+    //         localtm = localtime(&local);
 
-            FILE *log = fopen(filename, "a");
-            if (log != NULL)
-            {
-                fprintf(log, "%s", asctime(localtm));
-                fprintf(log, "CPU used: %.2f %%\n", cpu_used);
-                fprintf(log, "RAM used: %.2f %%\n\n", ram_used);
+    //         char filename[128], program[128];
+    //         strcpy(program, argv[0]);
+    //         memset(filename, 0x00, sizeof(filename));
+    //         sprintf(filename, "%s/%s%02d%02d.log", getenv("LOG_HOME"), argv[0],
+    //                 localtm->tm_mon + 1, localtm->tm_mday);
 
-                sendWarningMsg(asctime(localtm), &cpu_used, &ram_used);
-            }
-            fclose(log);
-        };
-    }
+    //         FILE *log = fopen(filename, "a");
+    //         if (log != NULL)
+    //         {
+    //             fprintf(log, "%s", asctime(localtm));
+    //             fprintf(log, "CPU used: %.2f %%\n", cpu_used);
+    //             fprintf(log, "RAM used: %.2f %%\n\n", ram_used);
+
+    //             sendWarningMsg(asctime(localtm), &cpu_used, &ram_used);
+    //         }
+    //         fclose(log);
+    //     };
+    // }
 
     return 0;
 }
