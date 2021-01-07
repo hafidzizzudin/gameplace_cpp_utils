@@ -85,7 +85,7 @@ void isCritPerformance(double *cpu, double *ram)
 
     pclose(pipe);
 
-    *cpu = cpu_used / 4.0;
+    *cpu = cpu_used / 2.0;
     *ram = percent_ram;
 }
 
@@ -96,7 +96,7 @@ void sendWarningMsg(const char *currenttime, const double &cpu, const double &ra
     sprintf(percent_stat, "AVGCPU used: %.2f %%, AVGRAM used: %.2f %%", cpu, ram);
 
     ss << "curl -H \"Content-Type: application/json\" --data";
-    ss << " '{\"chat_id\":-495061825, \"text\":\"[DAILY REPORT garudaprofit.gameplace.asia]\n"
+    ss << " '{\"chat_id\":-495061825, \"text\":\"[DAILY REPORT DB garudaprofit.gameplace.asia]\n"
        << currenttime << percent_stat << "\"}'";
     ss << " https://api.telegram.org/bot1220023412:AAF19w_vUpv2ctznq6HR88WxNIe_XMM8KK4/sendMessage";
     ss << " >>/dev/null 2>>/dev/null";
@@ -132,58 +132,63 @@ void checkLocalTime(char *target_tz = "Asia/Jakarta")
 
 int main(int argc, char *argv[])
 {
-    checkLocalTime();
+    pid_t pid = fork();
 
-    // pid_t pid = fork();
+    if (pid > 0)
+    {
+        printf("Process is running in the background PID: %d\n", pid);
+        exit(0);
+    }
 
-    // if (pid > 0)
-    // {
-    //     printf("Process is running in the background PID: %d\n", pid);
-    //     exit(0);
-    // }
+    int nCpu = 0;
+    int nRam = 0;
+    double totCpu = 0.0; // in percent
+    double totRam = 0.0; // in percent
 
-    // int nCpu = 0;
-    // int nRam = 0;
-    // double totCpu = 0.0; // in percent
-    // double totRam = 0.0; // in percent
+    while (1)
+    {
+        sleep(1);
+        double cpu_used, ram_used;
 
-    // while (1)
-    // {
-    //     sleep(1);
-    //     double cpu_used, ram_used;
+        isCritPerformance(&cpu_used, &ram_used);
+        totCpu += cpu_used;
+        totRam += ram_used;
 
-    //     isCritPerformance(&cpu_used, &ram_used);
-    //     totCpu += cpu_used;
-    //     totRam += ram_used;
+        nCpu++;
+        nRam++;
 
-    //     nCpu++;
-    //     nRam++;
+        time_t local;
+        struct tm *localtm, *globaltm;
+        char tzsetup[20];
 
-    //     time_t local;
-    //     struct tm *localtm;
+        time(&local);
+        localtm = localtime(&local);
 
-    //     time(&local);
-    //     localtm = localtime(&local);
+        local = mktime(localtm);
 
-    //     if ((localtm->tm_hour == 12 && localtm->tm_min == 00 && localtm->tm_sec == 0) ||
-    //         (localtm->tm_hour == 23 && localtm->tm_min == 59 && localtm->tm_sec == 0))
-    //     {
-    //         double avgCpu = 0.0, avgRam = 0.0;
-            
-    //         if (nCpu != 0)
-    //             avgCpu = (double)(totCpu / nCpu);
-            
-    //         if(nRam != 0)
-    //             avgRam = (double)(totRam / nRam);
+        sprintf(tzsetup, "TZ=%s", "Asia/Jakarta");
+        putenv(tzsetup);
+        globaltm = localtime(&local);
 
-    //         sendWarningMsg(asctime(localtm), (double)(totCpu / nCpu), (double)(totRam / nRam));
+        if ((globaltm->tm_hour == 12 && globaltm->tm_min == 00 && globaltm->tm_sec == 0) ||
+            (globaltm->tm_hour == 23 && globaltm->tm_min == 59 && globaltm->tm_sec == 0))
+        {
+            double avgCpu = 0.0, avgRam = 0.0;
 
-    //         totCpu = 0.0;
-    //         totRam = 0.0;
-    //         nCpu = 0;
-    //         nRam = 0;
-    //     }
-    // }
+            if (nCpu != 0)
+                avgCpu = (double)(totCpu / nCpu);
+
+            if (nRam != 0)
+                avgRam = (double)(totRam / nRam);
+
+            sendWarningMsg(asctime(globaltm), (double)(totCpu / nCpu), (double)(totRam / nRam));
+
+            totCpu = 0.0;
+            totRam = 0.0;
+            nCpu = 0;
+            nRam = 0;
+        }
+    }
 
     return 0;
 }

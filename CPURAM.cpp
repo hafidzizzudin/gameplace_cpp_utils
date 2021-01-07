@@ -85,7 +85,7 @@ bool isCritPerformance(double *cpu, double *ram)
 
     pclose(pipe);
 
-    *cpu = cpu_used/4.0;
+    *cpu = cpu_used / 2.0;
     *ram = percent_ram;
 
     if (percent_ram >= 70.0 || *cpu >= 70.0)
@@ -102,7 +102,7 @@ void sendWarningMsg(const char *currenttime, const double *cpu, const double *ra
     sprintf(percent_stat, "CPU used: %.2f %%, RAM used: %.2f %%", *cpu, *ram);
 
     ss << "curl -H \"Content-Type: application/json\" --data";
-    ss << " '{\"chat_id\":-495061825, \"text\":\"[WARNING garudaprofit.gameplace.asia]\n"
+    ss << " '{\"chat_id\":-495061825, \"text\":\"[WARNING DB garudaprofit.gameplace.asia]\n"
        << currenttime << percent_stat << "\"}'";
     ss << " https://api.telegram.org/bot1220023412:AAF19w_vUpv2ctznq6HR88WxNIe_XMM8KK4/sendMessage";
     ss << " >>/dev/null 2>>/dev/null";
@@ -130,25 +130,32 @@ int main(int argc, char *argv[])
         if (isCritPerformance(&cpu_used, &ram_used))
         {
             time_t local;
-            struct tm *localtm;
+            struct tm *localtm, *globaltm;
+            char tzsetup[20];
 
             time(&local);
             localtm = localtime(&local);
+
+            local = mktime(localtm);
+
+            sprintf(tzsetup, "TZ=%s", "Asia/Jakarta");
+            putenv(tzsetup);
+            globaltm = localtime(&local);
 
             char filename[128], program[128];
             strcpy(program, argv[0]);
             memset(filename, 0x00, sizeof(filename));
             sprintf(filename, "%s/%s%02d%02d.log", getenv("LOG_HOME"), argv[0],
-                    localtm->tm_mon + 1, localtm->tm_mday);
+                    globaltm->tm_mon + 1, globaltm->tm_mday);
 
             FILE *log = fopen(filename, "a");
             if (log != NULL)
             {
-                fprintf(log, "%s", asctime(localtm));
+                fprintf(log, "%s", asctime(globaltm));
                 fprintf(log, "CPU used: %.2f %%\n", cpu_used);
                 fprintf(log, "RAM used: %.2f %%\n\n", ram_used);
 
-                sendWarningMsg(asctime(localtm), &cpu_used, &ram_used);
+                sendWarningMsg(asctime(globaltm), &cpu_used, &ram_used);
             }
             fclose(log);
         };
