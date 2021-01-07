@@ -125,56 +125,58 @@ void checkLocalTime()
 
 int main(int argc, char *argv[])
 {
-    pid_t pid = fork();
+    checkLocalTime();
 
-    if (pid > 0)
-    {
-        printf("Process is running in the background PID: %d\n", pid);
-        exit(0);
-    }
+    // pid_t pid = fork();
 
-    int nCpu = 0;
-    int nRam = 0;
-    double totCpu = 0.0; // in percent
-    double totRam = 0.0; // in percent
+    // if (pid > 0)
+    // {
+    //     printf("Process is running in the background PID: %d\n", pid);
+    //     exit(0);
+    // }
 
-    while (1)
-    {
-        sleep(1);
-        double cpu_used, ram_used;
+    // int nCpu = 0;
+    // int nRam = 0;
+    // double totCpu = 0.0; // in percent
+    // double totRam = 0.0; // in percent
 
-        isCritPerformance(&cpu_used, &ram_used);
-        totCpu += cpu_used;
-        totRam += ram_used;
+    // while (1)
+    // {
+    //     sleep(1);
+    //     double cpu_used, ram_used;
 
-        nCpu++;
-        nRam++;
+    //     isCritPerformance(&cpu_used, &ram_used);
+    //     totCpu += cpu_used;
+    //     totRam += ram_used;
 
-        time_t local;
-        struct tm *localtm;
+    //     nCpu++;
+    //     nRam++;
 
-        time(&local);
-        localtm = localtime(&local);
+    //     time_t local;
+    //     struct tm *localtm;
 
-        if ((localtm->tm_hour == 12 && localtm->tm_min == 00 && localtm->tm_sec == 0) ||
-            (localtm->tm_hour == 23 && localtm->tm_min == 59 && localtm->tm_sec == 0))
-        {
-            double avgCpu = 0.0, avgRam = 0.0;
+    //     time(&local);
+    //     localtm = localtime(&local);
+
+    //     if ((localtm->tm_hour == 12 && localtm->tm_min == 00 && localtm->tm_sec == 0) ||
+    //         (localtm->tm_hour == 23 && localtm->tm_min == 59 && localtm->tm_sec == 0))
+    //     {
+    //         double avgCpu = 0.0, avgRam = 0.0;
             
-            if (nCpu != 0)
-                avgCpu = (double)(totCpu / nCpu);
+    //         if (nCpu != 0)
+    //             avgCpu = (double)(totCpu / nCpu);
             
-            if(nRam != 0)
-                avgRam = (double)(totRam / nRam);
+    //         if(nRam != 0)
+    //             avgRam = (double)(totRam / nRam);
 
-            sendWarningMsg(asctime(localtm), (double)(totCpu / nCpu), (double)(totRam / nRam));
+    //         sendWarningMsg(asctime(localtm), (double)(totCpu / nCpu), (double)(totRam / nRam));
 
-            totCpu = 0.0;
-            totRam = 0.0;
-            nCpu = 0;
-            nRam = 0;
-        }
-    }
+    //         totCpu = 0.0;
+    //         totRam = 0.0;
+    //         nCpu = 0;
+    //         nRam = 0;
+    //     }
+    // }
 
     return 0;
 }
