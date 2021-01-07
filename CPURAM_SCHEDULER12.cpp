@@ -106,21 +106,28 @@ void sendWarningMsg(const char *currenttime, const double &cpu, const double &ra
     system(command.c_str());
 }
 
-void checkLocalTime()
+void checkLocalTime(char *target_tz = "Asia/Jakarta")
 {
     time_t local;
-    struct tm *localtm;
+    struct tm *localtm, *globaltm;
+    char tzsetup[20];
 
     time(&local);
     localtm = localtime(&local);
 
-    printf("current time : %s", asctime(localtm));
+    local = mktime(localtm);
+
+    sprintf(tzsetup, "TZ=%s", target_tz);
+    putenv(tzsetup);
+    globaltm = localtime(&local);
+
+    printf("current time : %s", asctime(globaltm));
 
     FILE *log = fopen("check_cron.txt", "a");
 
-    printf("%d-%d-%d", localtm->tm_hour, localtm->tm_min, localtm->tm_sec);
+    printf("%d-%d-%d", globaltm->tm_hour, globaltm->tm_min, globaltm->tm_sec);
 
-    fprintf(log, asctime(localtm));
+    fprintf(log, asctime(globaltm));
 }
 
 int main(int argc, char *argv[])
